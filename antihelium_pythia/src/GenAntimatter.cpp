@@ -1,8 +1,8 @@
 //-------------------------------------------------------------------------
-// main01.cc
-// Author:Eric Carlson.
 // Run pythia for several different DM annihilation processes and check
 // check formation rates of anti-nuclei up to A=4
+//
+// Author: Eric Carlson (originally), Adam Coogan
 //-------------------------------------------------------------------------
 #include <iostream>
 #include <string>
@@ -11,7 +11,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <boost/thread.hpp>
-#include "Pythia.h"
+#include "Pythia8/Pythia.h"
 #include <fstream>
 
 using namespace Pythia8;
@@ -21,7 +21,7 @@ using namespace std;
 //------------------------------------------------------------------------
 // Function Prototypes
 //------------------------------------------------------------------------
-double computeDistance(Vec4, Vec4);
+double computeDistance(Vec4 v1, Vec4 v2);
 bool checkCoal(int numParticles, Vec4 p[]);
 void writeEvent(double CMS, int numParticles, Particle part[]);
 int main(int argc, char *argv[]);
@@ -31,7 +31,7 @@ void pythiaThread(int numEvents, double CMS, int seed, int process);
 //------------------------------------------------------------------------
 // Global Declarations
 //------------------------------------------------------------------------
-double pCoal =  .160; // Coalesence momentum in GeV
+double pCoal = 0.160; // Coalesence momentum in GeV
 int antideuteron = 0; // Number of antideuterons
 int antihelium3  = 0;
 int antihelium4  = 0;
@@ -48,15 +48,19 @@ const int PDG_bbar = -5;
 // Filewriter
 ofstream eventFile;
 
-
 /////////////////////////////////////////////////////////////////////////
 // main() starts each thread.  Uses boost libraries for multi-threading
 /////////////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[]) {
 
 	if (argc != 4){
-		cout << "\nSYNTAX:\nmain01.exe <Event File> <Process> <p_coal (GeV)>" << endl;
-		cout << "Processes:\n0: e+ e- -> z -> b bbar\n1: e+ e- -> z -> t tbar\n2: e+ e- -> z -> w+ w-\n3: e+ e- -> g g (NOT IMPLEMENTED YET)\n4: e+ e- -> h z "<< endl;
+		cout << "\nSYNTAX:\nGenAntimatter <Event File> <Process> <p_coal (GeV)>" << endl;
+		cout << "Processes:"
+                "\n0: e+ e- -> z -> b bbar"
+                "\n1: e+ e- -> z -> t tbar"
+                "\n2: e+ e- -> z -> w+ w-"
+                "\n3: e+ e- -> g g (NOT IMPLEMENTED YET)"
+                "\n4: e+ e- -> h z "<< endl;
 		return 0;
 	}
 
@@ -71,19 +75,20 @@ int main(int argc, char *argv[]) {
 
 	// Find number of CPUs
 	//long numCPU = sysconf( _SC_NPROCESSORS_ONLN );
-	long numCPU = 1;  // Uncomment to specify num CPUs
+	const long numCPU = 1;  // Uncomment to specify num CPUs
 	cout << "Using " << numCPU << " CPUs..." << endl;
 	int seed;
 
 	// Initialize file writer
 	eventFile.open(argv[1]);
-	eventFile << "RUNDETAILS " << time(NULL)<< " " << numEvents << " " << process << endl;
+	eventFile << "# RUNDETAILS: time = " << time(NULL) << ", numEvents = " << numEvents
+        << ", process number = " << process << endl;
+    eventFile << "# Columns: E_CM, A (mass number Z+N), Z (atomic/proton number), particle energy (GeV), "
+              "p_coal (GeV)" << endl;
 
 	//int numMasses = 3;
 	double CMS[4] = {20,200,1000,2000};
 	int numMasses = 4;
-
-
 
 	for (int massidx=0; massidx < numMasses; massidx++){
 		// Thread Array
@@ -104,7 +109,7 @@ int main(int argc, char *argv[]) {
 	}
 	// Close filewriter
 	eventFile.close();
-	cout << "Job Finsished!" << endl;
+	cout << "Job finished!" << endl;
 	return 1; // 1 for success
 } // End Main
 
@@ -127,7 +132,9 @@ int main(int argc, char *argv[]) {
 void pythiaThread(int numEvents, double CMS, int seed, int process)
 {
 	// Generator. Process selection. LHC initialization. Histogram.
+    std::cout << "Setting up pythia" << std::endl;
 	Pythia pythia;
+    std::cout << "Done setting up pythia" << std::endl;
 
 	// Output Message every 10,000 events
 	pythia.readString("Next:numberCount = 10000.");
@@ -216,9 +223,6 @@ void pythiaThread(int numEvents, double CMS, int seed, int process)
 	return;
 }
 
-
-
-
 //------------------------------------------------------------------------------
 // Computes the absolute distance of the first 3 arguments of a 4 vector
 //------------------------------------------------------------------------------
@@ -250,7 +254,6 @@ bool checkCoal(int numParticles, Vec4 p[]){
 	return true;
 }// end checkCoal
 
-
 //----------------------------------------------------------------------------
 // writeEvent.  Write an event property to file
 // 	Input:
@@ -268,14 +271,21 @@ void writeEvent(double CMS, int numParticles, Particle part[]){
 		// Energy
 		total.operator +=(part[i].p());
 		// Charge and Mass
-		if (part[i].id()==PDG_pbar) {Z-=1; A+=1;}
-		else if (part[i].id() == PDG_nbar) {A+=1;}
-		else if (part[i].id()==-PDG_pbar) {Z-=1; A+=1;}
-		else if (part[i].id() == -PDG_nbar) {A+=1;}
+		if (part[i].id() == PDG_pbar) {
+            Z-=1;
+            A+=1;
+        } else if (part[i].id() == PDG_nbar) {
+            A+=1;
+        } else if (part[i].id() == -PDG_pbar) { // Count this as a pbar since the process conserves B?
+            Z-=1;
+            A+=1;
+        } else if (part[i].id() == -PDG_nbar) { // Count this as an nbar since the process conserves B?
+            A+=1;
+        }
 	}
 	//cout<< total.e() << endl;
 
-	// Write to file  (CMS, A, Z, Particle Energy)
+	// Write to file  (CMS, A, Z, Particle Energy, p_coal)
 	eventFile << CMS << " " << A << " " << Z << " " << total.e() << " " << pCoal << "\n";
 }
 
@@ -290,8 +300,6 @@ void analyzeEvent(double CMS, Event event){
 	int pList [100];     for (int i=0; i<100; i++) pList[i] = -1;
 	int antiNucIndex = 0;
 	int NucIndex = 0;
-
-	
 
 	for (int i = 0; i < event.size(); ++i){
 		Particle& part = event[i];
