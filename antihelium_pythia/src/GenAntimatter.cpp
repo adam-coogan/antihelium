@@ -4,6 +4,7 @@
 //
 // Author: Eric Carlson (originally), Adam Coogan
 //-------------------------------------------------------------------------
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -22,7 +23,8 @@ using namespace std;
 // Function Prototypes
 //------------------------------------------------------------------------
 double computeDistance(Vec4 v1, Vec4 v2);
-bool checkCoal(int numParticles, Vec4 p[]);
+bool checkCoal(double pDist);
+double mbsRadius(int numParticles, Vec4 p[]);
 void writeEvent(double CMS, int numParticles, Particle part[]);
 int main(int argc, char *argv[]);
 void analyzeEvent(double CMS, Event event);
@@ -31,7 +33,7 @@ void pythiaThread(int numEvents, double CMS, int seed, int process);
 //------------------------------------------------------------------------
 // Global Declarations
 //------------------------------------------------------------------------
-double pCoal = 0.160; // Coalesence momentum in GeV
+double pCoal = 0.5
 int antideuteron = 0; // Number of antideuterons
 int antihelium3  = 0;
 int antihelium4  = 0;
@@ -112,8 +114,6 @@ int main(int argc, char *argv[]) {
 	cout << "Job finished!" << endl;
 	return 1; // 1 for success
 } // End Main
-
-
 
 //////////////////////////////////////////////////////////////////////////
 // pythiaThread starts a new instance of pythia for each thread.  This is
@@ -235,24 +235,37 @@ double computeDistance(Vec4 v1, Vec4 v2){
 }
 
 //------------------------------------------------------------------------------
-// Check the coalescence condition for n particles.
+// Check the coalescence condition.
 //------------------------------------------------------------------------------
-bool checkCoal(int numParticles, Vec4 p[]){
+bool checkCoal(double pDist){
+    // Check whether most distant point is in coalescence radius
+    if (pDist > pCoal / 2) {
+        return false;
+    } else {
+        return true;
+    }
+}// end checkCoal
+
+// TODO: this clearly breaks down for n > 3, but that's not a big problem.
+double mbsRadius(int numParticles, Vec4 p[]){
 	Vec4 centroid;
 	centroid.p(0,0,0,0);
 
 	// Find Centroid
-	for (int i=0; i< numParticles; i++) centroid.operator +=(p[i]);
+	for (int i=0; i< numParticles; i++) {
+        centroid.operator +=(p[i]);
+    }
+
 	centroid.rescale3(1./((double) numParticles));
 
-	// Check whether all the points are within the coalesence radius, return false if any one is outside
+	// Find the particle furthest from the centroid
+    double maxDist = 0;
 	for (int i=0; i<numParticles; i++){
-		double dist = computeDistance(centroid, p[i]);
-		if (dist > pCoal/2.) return false;
+		maxDist = max(computeDistance(centroid, p[i]), maxDist);
 	}
-	// If all points are within sphere, coalesence occurs
-	return true;
-}// end checkCoal
+
+	return maxDist;
+}
 
 //----------------------------------------------------------------------------
 // writeEvent.  Write an event property to file
@@ -341,27 +354,35 @@ void analyzeEvent(double CMS, Event event){
 			  Particle& part2 = event[pbarList[j]];
 
 			  ///////////////////////////////////////////////////////
-			  // Check for Antidueterons
+			  // Check for antideuterons
 			  Vec4 pVecs[4] = {part1.p(), part2.p(),0,0};
+
 			  // Check coalesence condition for antideuterons
-			  if (checkCoal(2, pVecs) == true){
+              double pDist2 = mbsRadius(2, pVecs);
+
+			  if (checkCoal(pDist2) == true){
 				antideuteron +=1 ;
-				//cout << "Antideuteron!!!" << endl;
+				cout << "Antideuteron!!!" << endl;
+
 				// Write event to file
 				Particle partArray[2] = {part1, part2};
 				writeEvent(CMS, 2, partArray);
-
-			  }
-			  else continue; // Don't check for antihelium if the first two don't coalesce!
+			  } else {
+                  continue; // Don't check for antihelium if the first two don't coalesce!
+              }
 
 			  ///////////////////////////////////////////////////////////////////
 			  // Check for Antihelium 3 or Tritium
 			  for (int k = j + 1; k < antiNucIndex; k++){
 				  Particle& part3 = event[pbarList[k]];
 				  pVecs[2] = part3.p();
+
 				  // Check coalesence condition for antihelium 3
-				  if (checkCoal(3, pVecs) == false) continue;
-				  else{
+                  double pDist3 = mbsRadius(3, pVecs);
+
+				  if (checkCoal(pDist3) == false) {
+                      continue;
+                  } else {
 				  	antihelium3 +=1 ;
 				  	cout << "Antihelium 3!!!" << endl;
 				  	Particle partArray[3] = {part1, part2, part3};
@@ -369,12 +390,16 @@ void analyzeEvent(double CMS, Event event){
 				  }
 
 				  ////////////////////////////////////////////////////////////////
+
 				  // Check for Antihelium 4
 				  for (int l = k + 1 ; l < antiNucIndex; l++){
 					  Particle& part4 = event[pbarList[k]];
 					  pVecs[3] = part4.p();
+
 					  // Check coalesence condition for antihelium 4
-					  if (checkCoal(4, pVecs) == true){
+                      double pDist4 = mbsRadius(3, pVecs);
+
+					  if (checkCoal(pDist4) == true){
 						  antihelium4 +=1 ;
 						  cout << "Antihelium 4!!!" << endl;
 						  Particle partArray[4] = {part1, part2, part3, part4};
@@ -386,13 +411,5 @@ void analyzeEvent(double CMS, Event event){
 	  }// end i
 	}// end test
 } // end analyzeEvent
-
-
-
-
-
-
-
-
 
 

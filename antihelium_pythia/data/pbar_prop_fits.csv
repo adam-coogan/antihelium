@@ -1,0 +1,7 @@
+# Parameters for fits of antiproton propagation functions from 2-zone diffusion model (PPPC4DMID). Assumes
+# NFW halo profile. The values of the propagation parameters in the MIN/MED/MAX models are given in Table 1 of
+# arxiv:1012.4515 (PPPC4DMID paper).
+# Columns: propagation parameter setting, a0, a1, a2, a3, a4
+MIN 0.9251 0.6464 -0.3105 -0.0917 0.0406 -0.0039
+MED 1.8398 0.5345 -0.2930 -0.0439 0.0252 -0.0025
+MAX 2.6877 -0.1339 -0.1105 0.0170 -0.0010 0.0000

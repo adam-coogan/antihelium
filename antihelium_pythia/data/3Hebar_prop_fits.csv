@@ -1,0 +1,10 @@
+# Parameters for fits of antihelium propagation functions from 2-zone diffusion model (Ibarra and Wild). See
+# propagation_functions.pdf in Shared_antihelium dropbox folder. Assumes NFW halo profile. The values of the
+# propagation parameters in the MIN/MED/MAX models are given in Table 1 of arxiv:1012.4515 (PPPC4DMID paper).
+# Columns: propagation parameter setting, antihelium interaction setting, a0, a1, a2, a3, a4
+MIN MethodAnn -6.44093 0.780775 -0.2235946 -0.020549 0.00557444
+MIN MethodInel -6.76322 0.71512 -0.192509 -0.0129952 0.00356495
+MED MethodAnn -4.38746 0.667013 -0.215212 -0.00941013 0.00440343
+MED MethodInel -4.77336 0.576683 -0.175307 0.000634924 0.00165159
+MAX MethodAnn -2.72768 0.0328706 -0.108132 0.00660771 0.000639246
+MAX MethodInel -3.08096 0.0357084 -0.081369 0.00729373 -0.000417183
