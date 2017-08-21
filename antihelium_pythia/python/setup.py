@@ -485,7 +485,7 @@ def commonFormatting(ch, labels=True):
         plt.text(7e-1, 3e-6, r"$\bar{D}$ (AMS-02)", fontsize=8, color=amsColor)
         plt.text(2.4e-1, 7e-5, r"$\bar{D}$ (BESS)", fontsize=8, color=bessColor)
         plt.text(2e-1, 2.9e-2, r"$\bar{p}$ (AMS-02)", fontsize=8, color='r')
-        plt.text(1e0, 7e-12, r"$\overline{^3{\rm He}}$ bg", fontsize=10, color="green")
+        #plt.text(1e0, 7e-12, r"$\overline{^3{\rm He}}$ bg", fontsize=10, color="green")
 
     # Label plot
     plt.title(r"$\chi\chi\to %s$"%toLabelStr(ch))
