@@ -3,4 +3,5 @@ Shared_antihelium*/
 dbar2015-master/
 *.ipynb_checkpoints
 *.swp
+*.pyc
 
