@@ -442,7 +442,7 @@ def plotAntinuc(spectra, mDMs, ch, phiF, pm, svDict, intMethod3Hebar):
                 phi3HebarU[:last_idx, 1], phiF, pm, svU, intMethod3Hebar)
 
         plt.fill(np.append(TTOAs3HebarL, TTOAs3HebarU[::-1]), np.append(dPhidTTOAs3HebarL,
-            dPhidTTOAs3HebarU[::-1]), color=colors[mDM], alpha=1, label=r"$m_\chi = %i{\rm GeV}$"%mDM)
+            dPhidTTOAs3HebarU[::-1]), color=colors[mDM], alpha=1, label=r"$m_\chi = %i\ {\rm GeV}$"%mDM)
 
 def commonFormatting(ch, labels=True):
     # Useful for plotting other functions
@@ -474,9 +474,10 @@ def commonFormatting(ch, labels=True):
     plotBinErrs(amspbarBinl, amspbarBinr, amspbarFluxes, amspbarFluxErrs, 'r')
 
     # 3Hebar background estimate from arxiv:1401.4017
-    plt.fill_between(bg3HebarBins, bg3HebarFluxes, bg3HebarFluxes * 1e2, color='lightgreen', alpha=0.3)
+    plt.plot(bg3HebarBins, bg3HebarFluxes, color='green')
     # 3Hebar background from arxiv:1704.05431 (Blum et al)
-    plt.fill_between(bg3HebarBlumBins, bg3HebarBlumFluxesLower, bg3HebarBlumFluxesUpper, color="darkgreen", alpha=0.3)
+    plt.fill_between(bg3HebarBlumBins, bg3HebarBlumFluxesLower, bg3HebarBlumFluxesUpper, color="darkgreen",
+            alpha=0.3)
 
     if labels:
         #plt.text(4.8e-1, 3e-10, r"$\overline{^3{\rm He}}$ (GAPS)", fontsize=8, color=gapsColor)
@@ -484,7 +485,7 @@ def commonFormatting(ch, labels=True):
         plt.text(7e-1, 3e-6, r"$\bar{D}$ (AMS-02)", fontsize=8, color=amsColor)
         plt.text(2.4e-1, 7e-5, r"$\bar{D}$ (BESS)", fontsize=8, color=bessColor)
         plt.text(2e-1, 2.9e-2, r"$\bar{p}$ (AMS-02)", fontsize=8, color='r')
-        plt.text(8e-1, 2e-11, r"$\overline{^3{\rm He}}$ bg", fontsize=10, color="green")
+        plt.text(1e0, 7e-12, r"$\overline{^3{\rm He}}$ bg", fontsize=10, color="green")
 
     # Label plot
     plt.title(r"$\chi\chi\to %s$"%toLabelStr(ch))
